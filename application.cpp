@@ -103,7 +103,8 @@ int swapInterval = 1;
 
 
 cLabel *debugPositionLabel;
-
+cLabel *debugFrictionLabel;
+cLabel *debugTempLabel;
 
 
 //------------------------------------------------------------------------------
@@ -179,6 +180,20 @@ cVector3d implicitWhiffleCubeGrad(double x, double y, double z)
 		64.0*pow(z,7.0)*termA - 16.0*z*termB
 	);
 }
+
+
+
+
+// [CPSC.86] Implicit Custom and Implicit Custom Gradient Functions.
+double implicitCustom(double x, double y, double z)
+{
+	return 		12.0*x*pow((2.0*x*x + y * y + z * z - 1.0), 2.0) - 0.2*x*z*z*z + 
+				6.0*y*pow((2.0*x*x + y * y + z * z - 1.0), 2.0) + 
+				6.0*z*pow((2.0*x*x + y * y + z * z - 1.0), 2.0);
+
+}
+
+
 
 
 // create the object representing the implicit surface
@@ -412,17 +427,25 @@ int main(int argc, char* argv[])
 				//				cVector3d(1.25, 1.25, 1.25), 0.025);
 
 
-	//// generate a mesh for the implicit surface (inside a bounding box with
-	//// range -1.25 to 1.25, and a resolution of 0.025 units)
-	//object->createFromFunction( implicitHeart,
-	//							implicitHeartGrad,
-	//							cVector3d(-1.25, -1.25, -1.25),
-	//							cVector3d(1.25, 1.25, 1.25), 0.015);
+	// generate a mesh for the implicit surface (inside a bounding box with
+	// range -1.25 to 1.25, and a resolution of 0.025 units)
+	object->createFromFunction( implicitHeart,
+								implicitHeartGrad,
+								cVector3d(-1.25, -1.25, -1.25),
+								cVector3d(1.25, 1.25, 1.25), 0.015);
 
 
 	//// generate a mesh for the implicit surface (inside a bounding box with
 	//// range -1.25 to 1.25, and a resolution of 0.025 units)
 	//object->createFromFunction( implicitWhiffleCube,
+	//							implicitWhiffleCubeGrad,
+	//							cVector3d(-1.25, -1.25, -1.25),
+	//							cVector3d(1.25, 1.25, 1.25), 0.025);
+
+
+	//// generate a mesh for the implicit surface (inside a bounding box with
+	//// range -1.25 to 1.25, and a resolution of 0.025 units)
+	//object->createFromFunction( implicitCustom,
 	//							implicitWhiffleCubeGrad,
 	//							cVector3d(-1.25, -1.25, -1.25),
 	//							cVector3d(1.25, 1.25, 1.25), 0.025);
@@ -458,6 +481,15 @@ int main(int argc, char* argv[])
 	debugPositionLabel = new cLabel(font);
 	debugPositionLabel->m_fontColor.setBlack();
 	camera->m_frontLayer->addChild(debugPositionLabel);
+
+	debugFrictionLabel = new cLabel(font);
+	debugFrictionLabel->m_fontColor.setBlack();
+	camera->m_frontLayer->addChild(debugFrictionLabel);
+
+	debugTempLabel = new cLabel(font);
+	debugTempLabel->m_fontColor.setBlack();
+	camera->m_frontLayer->addChild(debugTempLabel);
+
 
     // create a background
     cBackground* background = new cBackground();
@@ -613,10 +645,17 @@ void updateGraphics(void)
     // UPDATE WIDGETS
     /////////////////////////////////////////////////////////////////////
 
+	string debugSeedPt = object->debugSeedPoint.str();
 	string debugPos = object->debugToolPos.str();
 	string debugVal = to_string(object->functionValue);
 	string debugGradientVector = object->debugGradientVector.str();
 	string deltaP = to_string(object->deltaMovement);
+	string kinetic = object->debugKinetic ? "kinetic" : "Not Kinetic";
+	string touched = object->debugTouched ? "touched" : "Not Touched";
+	string toolVec = object->debugTempVec.str();
+	string gradLen = to_string(object->debugTempVec.length());
+	string tempA = to_string(object->debugTempA);
+	string tempB = to_string(object->debugTempB);
 
     // update haptic and graphic rate data
     labelRates->setText(cStr(freqCounterGraphics.getFrequency(), 0) + " Hz / " +
@@ -626,8 +665,15 @@ void updateGraphics(void)
     labelRates->setLocalPos((int)(0.5 * (width - labelRates->getWidth())), 15);
 
 
-	debugPositionLabel->setText("Haptic Point Position: " + debugPos + " and Implicit Function Value: " + debugVal + " and Gradient Vector: " + debugGradientVector + " and Delta P: " + deltaP);
+	debugPositionLabel->setText("Haptic Point Position: " + debugPos + " and Implicit Function Value: " + debugVal + " and Kinetic: " + kinetic + " and Touched: " + touched);
 	debugPositionLabel->setLocalPos((int)(0.5 * (width - debugPositionLabel->getWidth())), height - 50);
+
+	debugFrictionLabel->setText(+"Gradient Vector: " + debugGradientVector + " and Seed Point: " + debugSeedPt);
+	debugFrictionLabel->setLocalPos((int)(0.5 * (width - debugFrictionLabel->getWidth())), height - 100);
+
+	debugTempLabel->setText("ProxyToTool: " + toolVec + " and tan(cosTheta): " + tempA + " and CosTheta: " + tempB);
+	debugTempLabel->setLocalPos((int)(0.5 * (width - debugTempLabel->getWidth())), 50);
+
 
     /////////////////////////////////////////////////////////////////////
     // RENDER SCENE

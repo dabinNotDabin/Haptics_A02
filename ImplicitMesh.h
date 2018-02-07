@@ -57,12 +57,16 @@ public:
                                          const chai3d::cVector3d& a_toolVel,
                                          const unsigned int a_IDN);
 
-
+	chai3d::cVector3d ImplicitMesh::debugSeedPoint;
 	chai3d::cVector3d ImplicitMesh::debugToolPos;
 	chai3d::cVector3d ImplicitMesh::debugGradientVector;
 	double functionValue;
 	double deltaMovement;
-
+	bool debugKinetic;
+	bool debugTouched;
+	double debugTempA;
+	double debugTempB;
+	chai3d::cVector3d ImplicitMesh::debugTempVec;
 };
 
 #endif

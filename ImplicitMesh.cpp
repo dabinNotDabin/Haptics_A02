@@ -118,30 +118,36 @@ void ImplicitMesh::computeLocalInteraction(const cVector3d& a_toolPos,
 	chai3d::cVector3d seedPoint;
 	chai3d::cVector3d fromProxyToHapticPoint;
 	chai3d::cVector3d temp;
-	double theta;
+	double cosTheta;
 	double frictionDist = 0.0;
-	double epsilon = 0.000001;
+	double epsilon = 0.00001;
 
 	debugToolPos = a_toolPos;
 	functionValue = m_surfaceFunction(a_toolPos.x(), a_toolPos.y(), a_toolPos.z());
-  
-	if (functionValue < 0.0)
+
+	//// Get the gradient at the previously approximated proxy position.. use as plane normal.
+	planeNormal = m_gradientFunction(m_interactionPoint.x(), m_interactionPoint.y(), m_interactionPoint.z());
+	planeNormal.normalize();
+	fromProxyToHapticPoint = a_toolPos - m_interactionPoint;
+
+
+	if (functionValue < 0.0 || touched)
 	{
-		// Get the gradient at the previously approximated proxy position.. use as plane normal.
-		planeNormal = m_interactionPoint + m_gradientFunction(m_interactionPoint.x(), m_interactionPoint.y(), m_interactionPoint.z());
-		planeNormal.normalize();
-		fromProxyToHapticPoint = a_toolPos - m_interactionPoint;
+		temp = fromProxyToHapticPoint; 
+		temp.normalize();
 
-		temp = fromProxyToHapticPoint.normalize();
+		cosTheta = temp.dot(planeNormal);
 
-		theta = temp.dot(planeNormal);
+		debugTempVec = temp;
+		debugTempB = cosTheta;
+		debugTempA = tan(acos(cosTheta));
 
-		if (tan(theta) > mu_s)
+		if (abs(tan(acos(cosTheta))) > mu_s)
 			kinetic = true;
 
 		if (kinetic)
 		{
-			if (tan(theta) > mu_k)
+			if (abs(tan(acos(cosTheta))) > mu_k)
 			{
 				frictionDist = sin(atan(mu_k)) + epsilon;
 			}
@@ -150,12 +156,13 @@ void ImplicitMesh::computeLocalInteraction(const cVector3d& a_toolPos,
 		}
 		else
 		{
-			if (tan(theta) > mu_s)
+			if (abs(tan(acos(cosTheta))) > mu_s)
 			{
 				frictionDist += sin(atan(mu_k)) + epsilon;
 				kinetic = true;
 			}
 		}
+
 
 		if (kinetic)
 		{
@@ -164,7 +171,7 @@ void ImplicitMesh::computeLocalInteraction(const cVector3d& a_toolPos,
 				chai3d::cVector3d projToolVectorOntoPlaneNormal;
 
 				// Project onto the plane normal and reverse it's direction since here, theta > 90.
-				projToolVectorOntoPlaneNormal = (-1) * (fromProxyToHapticPoint.dot(planeNormal) * planeNormal);
+				projToolVectorOntoPlaneNormal = fromProxyToHapticPoint.dot(planeNormal) * planeNormal;
 
 				temp = fromProxyToHapticPoint - projToolVectorOntoPlaneNormal;
 				temp.normalize();
@@ -173,9 +180,14 @@ void ImplicitMesh::computeLocalInteraction(const cVector3d& a_toolPos,
 
 				// New seed point will be on the tangent plane defined by the previously approximated
 				// proxy position and the gradient vector at that point.
-				seedPoint = m_interactionPoint + fromProxyToHapticPoint - projToolVectorOntoPlaneNormal - temp;
+				seedPoint = m_interactionPoint + fromProxyToHapticPoint - projToolVectorOntoPlaneNormal;// -temp;
 
-				m_interactionPoint = findNearestSurfacePoint(seedPoint, epsilon);         
+				debugSeedPoint = seedPoint;
+
+				m_interactionPoint = findNearestSurfacePoint(seedPoint, epsilon);        
+
+				if (fromProxyToHapticPoint.dot(planeNormal) > epsilon)
+					touched = false;
 			}	
 			else
 			{
@@ -188,9 +200,7 @@ void ImplicitMesh::computeLocalInteraction(const cVector3d& a_toolPos,
 	}
 	else
 	{
-		touched = false;
-
-		if (a_toolPos != m_interactionPoint)
+		if ((a_toolPos.x() !=  m_interactionPoint.x()) || (a_toolPos.y() != m_interactionPoint.y()) || (a_toolPos.z() != m_interactionPoint.z()))
 			kinetic = true;
 		else
 			kinetic = false;
@@ -204,6 +214,9 @@ void ImplicitMesh::computeLocalInteraction(const cVector3d& a_toolPos,
 		// with the object.
 		m_interactionInside = false;
 	}
+
+	debugTouched = touched;
+	debugKinetic = kinetic;
 }
 
 
@@ -211,8 +224,7 @@ void ImplicitMesh::computeLocalInteraction(const cVector3d& a_toolPos,
 cVector3d ImplicitMesh::findNearestSurfacePoint(cVector3d seedPoint, double epsilon)
 {
 	chai3d::cVector3d p(seedPoint);
-	chai3d::cVector3d deltaP(0.5, 0.5, 0.5);
-	debugGradientVector = cVector3d(0.01, 0.01, 0.01);
+	chai3d::cVector3d deltaP;
 
 	do
 	{
@@ -222,6 +234,9 @@ cVector3d ImplicitMesh::findNearestSurfacePoint(cVector3d seedPoint, double epsi
 		p += deltaP;
 
 		deltaMovement = deltaP.length();
+
+
+
 
 	} while (deltaP.length() > epsilon);
 
