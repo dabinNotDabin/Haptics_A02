@@ -104,6 +104,7 @@ int swapInterval = 1;
 
 cLabel *debugPositionLabel;
 cLabel *debugFrictionLabel;
+cLabel *debugFrictionLabelB;
 cLabel *debugTempLabel;
 
 
@@ -486,6 +487,12 @@ int main(int argc, char* argv[])
 	debugFrictionLabel->m_fontColor.setBlack();
 	camera->m_frontLayer->addChild(debugFrictionLabel);
 
+	
+	debugFrictionLabelB = new cLabel(font);
+	debugFrictionLabelB->m_fontColor.setBlack();
+	camera->m_frontLayer->addChild(debugFrictionLabelB);
+
+	
 	debugTempLabel = new cLabel(font);
 	debugTempLabel->m_fontColor.setBlack();
 	camera->m_frontLayer->addChild(debugTempLabel);
@@ -656,7 +663,11 @@ void updateGraphics(void)
 	string gradLen = to_string(object->debugTempVec.length());
 	string tempA = to_string(object->debugTempA);
 	string tempB = to_string(object->debugTempB);
-
+	string cosThta = to_string(object->cosThta);
+	string theta = to_string(object->theta);
+	string tanTheta = to_string(object->tanTheta);
+	string thetaK = to_string(object->thetaK);
+	string sinThetaK = to_string(object->singThetaK);
     // update haptic and graphic rate data
     labelRates->setText(cStr(freqCounterGraphics.getFrequency(), 0) + " Hz / " +
         cStr(freqCounterHaptics.getFrequency(), 0) + " Hz");
@@ -668,11 +679,21 @@ void updateGraphics(void)
 	debugPositionLabel->setText("Haptic Point Position: " + debugPos + " and Implicit Function Value: " + debugVal + " and Kinetic: " + kinetic + " and Touched: " + touched);
 	debugPositionLabel->setLocalPos((int)(0.5 * (width - debugPositionLabel->getWidth())), height - 50);
 
-	debugFrictionLabel->setText(+"Gradient Vector: " + debugGradientVector + " and Seed Point: " + debugSeedPt);
+	debugFrictionLabel->setText("Gradient Vector: " + debugGradientVector + " and Seed Point: " + debugSeedPt);
 	debugFrictionLabel->setLocalPos((int)(0.5 * (width - debugFrictionLabel->getWidth())), height - 100);
 
-	debugTempLabel->setText("ProxyToTool: " + toolVec + " and tan(cosTheta): " + tempA + " and CosTheta: " + tempB);
-	debugTempLabel->setLocalPos((int)(0.5 * (width - debugTempLabel->getWidth())), 50);
+	debugFrictionLabelB->setText("Cos(@): " + cosThta + "  --  @: " + theta + "  --  tan(@): " + tanTheta + "  --  Kinetic @: " + thetaK + "  --  sin(Kinetic@): " + sinThetaK);
+	debugFrictionLabelB->setLocalPos((int)(0.5 * (width - debugFrictionLabelB->getWidth())), 50);
+	
+	double cosThta;
+	double theta;
+	double tanTheta;
+	double thetaK;
+	double sinThetaK;
+	
+	
+	debugTempLabel->setText("ProxyToTool: " + toolVec + "  --  FrictionDistance: " + tempA);
+	debugTempLabel->setLocalPos((int)(0.5 * (width - debugTempLabel->getWidth())), 100);
 
 
     /////////////////////////////////////////////////////////////////////

@@ -20,6 +20,7 @@
 #define IMPLICITMESH_H
 
 #include "chai3d.h"
+#include <queue>
 
 using namespace chai3d;
 
@@ -37,6 +38,8 @@ class ImplicitMesh : public chai3d::cMesh
 
 	bool touched = false;
 	bool kinetic = false;
+	
+	queue<chai3d::cVector3d> gradientQ;
 
 public:
     ImplicitMesh();
@@ -67,6 +70,12 @@ public:
 	double debugTempA;
 	double debugTempB;
 	chai3d::cVector3d ImplicitMesh::debugTempVec;
+	
+	double cosThta;
+	double theta;
+	double tanTheta;
+	double thetaK;
+	double sinThetaK;
 };
 
 #endif

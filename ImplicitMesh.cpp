@@ -115,6 +115,7 @@ void ImplicitMesh::computeLocalInteraction(const cVector3d& a_toolPos,
     double mu_k = m_material->getDynamicFriction();
 
 	chai3d::cVector3d planeNormal;
+	chai3d::cVector3d avgNormal;
 	chai3d::cVector3d seedPoint;
 	chai3d::cVector3d fromProxyToHapticPoint;
 	chai3d::cVector3d temp;
@@ -130,9 +131,24 @@ void ImplicitMesh::computeLocalInteraction(const cVector3d& a_toolPos,
 	planeNormal.normalize();
 	fromProxyToHapticPoint = a_toolPos - m_interactionPoint;
 
+	
+//	if (gradientQ.size() < 11)
+//		gradientQ.push(planeNormal);
+	
+	
+//	for (int i = 0; i < 11, i++)
+//	{
+//		planeNormal = gradientQ.pop()
+//		avgNormal += planeNormal;
+//		gradientQ.push(planeNormal);
+//	}
 
+//	planeNormal = avgNormal * 0.1;
+	
 	if (functionValue < 0.0 || touched)
 	{
+		double radToDeg = 180 / M_PI;
+		
 		temp = fromProxyToHapticPoint; 
 		temp.normalize();
 
@@ -140,7 +156,12 @@ void ImplicitMesh::computeLocalInteraction(const cVector3d& a_toolPos,
 
 		debugTempVec = temp;
 		debugTempB = cosTheta;
-		debugTempA = tan(acos(cosTheta));
+		
+		cosThta = cosTheta;
+		theta = acos(cosTheta) * radToDeg;
+		tanTheta = tan(acos(cosTheta));
+		thetaK = atan(mu_k) * radToDeg;
+		sinThetak = sin(atan(mu_k));	
 
 		if (abs(tan(acos(cosTheta))) > mu_s)
 			kinetic = true;
@@ -164,6 +185,8 @@ void ImplicitMesh::computeLocalInteraction(const cVector3d& a_toolPos,
 		}
 
 
+		debugTempA = frictionDist;
+		
 		if (kinetic)
 		{
 			if (touched)
@@ -176,12 +199,18 @@ void ImplicitMesh::computeLocalInteraction(const cVector3d& a_toolPos,
 				temp = fromProxyToHapticPoint - projToolVectorOntoPlaneNormal;
 				temp.normalize();
 
-				temp = temp * frictionDist;
-
+				temp = temp * frictionDist;				
+							
 				// New seed point will be on the tangent plane defined by the previously approximated
 				// proxy position and the gradient vector at that point.
 				seedPoint = m_interactionPoint + fromProxyToHapticPoint - projToolVectorOntoPlaneNormal;// -temp;
 
+				
+				// Can do the two lines immediately following this comment instead of the two that preceed this comment.
+//				temp = ((fromProxyToHapticPoint - projToolVectorOntoPlaneNormal).length() - frictionDist) * temp;
+//				seedPoint = m_interactionPoint + temp;
+
+				
 				debugSeedPoint = seedPoint;
 
 				m_interactionPoint = findNearestSurfacePoint(seedPoint, epsilon);        
