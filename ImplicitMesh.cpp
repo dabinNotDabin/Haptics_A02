@@ -149,7 +149,7 @@ void ImplicitMesh::computeLocalInteraction(const cVector3d& a_toolPos,
 		{
 			if (abs(tan(acos(cosTheta))) > mu_k)
 			{
-				frictionDist = sin(atan(mu_k)) + epsilon;
+				frictionDist = sin(atan(mu_k)) * fromProxyToHapticPoint.length() + epsilon;
 			}
 			else
 				kinetic = false;
@@ -158,7 +158,7 @@ void ImplicitMesh::computeLocalInteraction(const cVector3d& a_toolPos,
 		{
 			if (abs(tan(acos(cosTheta))) > mu_s)
 			{
-				frictionDist += sin(atan(mu_k)) + epsilon;
+				frictionDist += sin(atan(mu_k)) * fromProxyToHapticPoint.length() + epsilon;
 				kinetic = true;
 			}
 		}
